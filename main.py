@@ -21,13 +21,16 @@ async def generate_learning_content(topic: str, lang: str):
     prompt = f"Create a 3-scene video script for learning {topic} in {lang}. For each scene, provide a 'visual_prompt' for an image generator and 'narration_text'."
     
     async with httpx.AsyncClient() as client:
-        response = await client.post(
-            "https://openrouter.ai/api/v1/chat/completions",
-            headers={"Authorization": f"Bearer {OPENROUTER_KEY}"},
-            json={
-                "model": "meta-llama/llama-3.3-70b-instruct:free",
-                "messages": [{"role": "user", "content": prompt}],
-                "response_format": { "type": "json_object" } # Requesting JSON
-            }
-        )
+       response = await client.post(
+    "[https://openrouter.ai/api/v1/chat/completions](https://openrouter.ai/api/v1/chat/completions)",
+    headers={"Authorization": f"Bearer {OPENROUTER_KEY}"},
+    json={
+        "model": "meta-llama/llama-3.3-70b-instruct:free",
+        "messages": [{
+            "role": "user", 
+            "content": f"Create a 3-scene learning path for {topic} in {lang}. Output ONLY a JSON object with a 'scenes' array containing 'visual_prompt' and 'narration_text' fields."
+        }],
+        "response_format": { "type": "json_object" } # Ye line important hai
+    }
+)
     return response.json()
