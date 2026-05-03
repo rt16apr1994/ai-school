@@ -1,14 +1,15 @@
+import os
+import httpx
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import httpx
-import os
-import json
 
 app = FastAPI()
 
+# CORS configuration to allow your GitHub site to talk to Render
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -16,41 +17,36 @@ app.add_middleware(
 OPENROUTER_KEY = os.getenv("OPENROUTER_API_KEY")
 
 @app.get("/generate")
-async def generate_learning_content(topic: str, lang: str):
-    # OpenRouter free models ke liye Referer header mandatory hota hai
+async def generate_content(topic: str, lang: str):
+    if not OPENROUTER_KEY:
+        return {"error": "API_KEY_MISSING"}
+
     headers = {
-    "Authorization": f"Bearer {OPENROUTER_KEY}",
-    "HTTP-Referer": "https://github.com/rajeshkumar1994", # Aapka profile link
-    "X-Title": "AI Tutor App",
-    "Content-Type": "application/json"
-}
-    
-    # Prompt ko force karein ki wo strictly JSON bhejey
-    prompt = (
-        f"Create a 3-scene learning path for {topic} in {lang}. "
-        "Return ONLY a JSON object. Format: "
-        '{"scenes": [{"visual_prompt": "description", "narration_text": "text"}]}'
-    )
-    
+        "Authorization": f"Bearer {OPENROUTER_KEY}",
+        "HTTP-Referer": "https://github.com/rajeshkumar1994", # Mandatory for OpenRouter
+        "Content-Type": "application/json"
+    }
+
+    # Stable Model ID update
+    payload = {
+        "model": "meta-llama/llama-3.2-1b-instruct:free",
+        "messages": [
+            {
+                "role": "user",
+                "content": f"Create a 3-scene learning path for {topic} in {lang}. Output ONLY JSON: " + '{"scenes": [{"visual_prompt": "description", "narration_text": "text"}]}'
+            }
+        ],
+        "response_format": {"type": "json_object"}
+    }
+
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
                 "https://openrouter.ai/api/v1/chat/completions",
                 headers=headers,
-                json={
-                    "model": "google/gemini-2.0-flash-exp:free", 
-                    "messages": [{"role": "user", "content": prompt}],
-                    "response_format": { "type": "json_object" }
-                },
-                timeout=45.0
+                json=payload,
+                timeout=60.0
             )
-            
-            res_data = response.json()
-            
-            # Debugging ke liye Render logs mein print karein
-            print(f"OpenRouter Response: {res_data}")
-            
-            return res_data
-            
+            return response.json()
         except Exception as e:
             return {"error": str(e)}
