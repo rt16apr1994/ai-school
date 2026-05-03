@@ -19,11 +19,11 @@ OPENROUTER_KEY = os.getenv("OPENROUTER_API_KEY")
 async def generate_learning_content(topic: str, lang: str):
     # OpenRouter free models ke liye Referer header mandatory hota hai
     headers = {
-        "Authorization": f"Bearer {OPENROUTER_KEY}",
-        "HTTP-Referer": "https://github.com/rajeshkumar1994", # Aapka GitHub profile link
-        "X-Title": "AI School App",
-        "Content-Type": "application/json"
-    }
+    "Authorization": f"Bearer {OPENROUTER_KEY}",
+    "HTTP-Referer": "https://github.com/rajeshkumar1994", # Aapka profile link
+    "X-Title": "AI Tutor App",
+    "Content-Type": "application/json"
+}
     
     # Prompt ko force karein ki wo strictly JSON bhejey
     prompt = (
