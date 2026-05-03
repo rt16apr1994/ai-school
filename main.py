@@ -22,22 +22,23 @@ async def generate_content(topic: str, lang: str):
         return {"error": "API_KEY_MISSING"}
 
     headers = {
-        "Authorization": f"Bearer {OPENROUTER_KEY}",
-        "HTTP-Referer": "https://github.com/rajeshkumar1994", # Mandatory for OpenRouter
-        "Content-Type": "application/json"
-    }
+    "Authorization": f"Bearer {OPENROUTER_KEY}",
+    "HTTP-Referer": "https://github.com/rajeshkumar1994", # Mandatory line
+    "X-Title": "AI Tutor App",
+    "Content-Type": "application/json"
+}
 
     # Stable Model ID update
     payload = {
-        "model": "meta-llama/llama-3.2-1b-instruct:free",
-        "messages": [
-            {
-                "role": "user",
-                "content": f"Create a 3-scene learning path for {topic} in {lang}. Output ONLY JSON: " + '{"scenes": [{"visual_prompt": "description", "narration_text": "text"}]}'
-            }
-        ],
-        "response_format": {"type": "json_object"}
-    }
+    "model": "meta-llama/llama-3.2-1b-instruct:free", # Stable free model
+    "messages": [
+        {
+            "role": "user",
+            "content": f"Create a 3-scene learning path for {topic} in {lang}. Output strictly JSON: " + '{"scenes": [{"visual_prompt": "description", "narration_text": "text"}]}'
+        }
+    ],
+    "response_format": {"type": "json_object"}
+}
 
     async with httpx.AsyncClient() as client:
         try:
