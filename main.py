@@ -16,6 +16,13 @@ app.add_middleware(
 
 OPENROUTER_KEY = os.getenv("OPENROUTER_API_KEY")
 
+headers = {
+    "Authorization": f"Bearer {OPENROUTER_KEY}",
+    "HTTP-Referer": "https://github.com", # Ye line mandatory hai
+    "X-Title": "Personalized Learning App",
+    "Content-Type": "application/json"
+}
+
 @app.get("/generate")
 async def generate_learning_content(topic: str, lang: str):
     prompt = f"Create a 3-scene video script for learning {topic} in {lang}. For each scene, provide a 'visual_prompt' for an image generator and 'narration_text'."
