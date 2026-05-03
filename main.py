@@ -25,7 +25,7 @@ async def generate_learning_content(topic: str, lang: str):
     "[https://openrouter.ai/api/v1/chat/completions](https://openrouter.ai/api/v1/chat/completions)",
     headers={"Authorization": f"Bearer {OPENROUTER_KEY}"},
     json={
-        "model": "meta-llama/llama-3.3-70b-instruct:free",
+        "model": "google/gemini-2.0-flash-exp:free",
         "messages": [{
             "role": "user", 
             "content": f"Create a 3-scene learning path for {topic} in {lang}. Output ONLY a JSON object with a 'scenes' array containing 'visual_prompt' and 'narration_text' fields."
