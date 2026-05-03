@@ -1,4 +1,4 @@
-const BACKEND_URL = "https://your-app-name.onrender.com";
+const BACKEND_URL = "https://ai-video-tutor-nkdp.onrender.com";
 
 async function createVideo() {
     const topic = document.getElementById('topic').value;
