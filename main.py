@@ -5,10 +5,11 @@ import os
 
 app = FastAPI()
 
-# Enable CORS so your GitHub Pages can talk to this backend
+# Ye section GitHub Pages se aane wali requests ko allow karega
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    allow_origins=["*"], # For testing, allows all. Later you can put your github link.
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
