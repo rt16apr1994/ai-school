@@ -22,17 +22,19 @@ MODELS_TO_TRY = [
     "mistralai/mistral-7b-instruct:free"
 ]
 
+
 @app.get("/generate")
 async def generate_content(topic: str, lang: str):
     if not OPENROUTER_KEY:
         return {"error": "KEY_NOT_FOUND", "details": "Render Environment Variable check karein."}
-
-    headers = {
-        "Authorization": f"Bearer {OPENROUTER_KEY}",
-        "HTTP-Referer": "https://github.com/rajeshkumar1994", # Mandatory for free tier
-        "X-Title": "AI School App",
-        "Content-Type": "application/json"
-    }
+    print(f"DEBUG: Attempting request for {topic} with key ending in ...{OPENROUTER_KEY[-4:]}")    
+    # Yeh format OpenRouter ke liye sabse best hai
+headers = {
+    "Authorization": f"Bearer {OPENROUTER_KEY}", # Key load ho rahi hai ya nahi, ye check hoga
+    "HTTP-Referer": "https://rt16apr1994.github.io", # Valid URL format
+    "X-Title": "AI School App",
+    "Content-Type": "application/json"
+}
 
     prompt = (
         f"Create a 3-scene learning path for {topic} in {lang}. "
