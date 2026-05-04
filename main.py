@@ -14,19 +14,19 @@ app.add_middleware(
 
 OPENROUTER_KEY = os.getenv("OPENROUTER_API_KEY")
 
+# OpenRouter ke current active free models (updated slugs)
 MODELS_TO_TRY = [
-    "meta-llama/llama-3.2-1b-instruct:free",
-    "meta-llama/llama-3.1-8b-instruct:free",
-    "google/gemini-2.0-flash-exp:free",
-    "mistralai/mistral-7b-instruct:free"
+    "meta-llama/llama-3.2-1b-instruct", # Removed :free as OpenRouter auto-routes
+    "meta-llama/llama-3.1-8b-instruct",
+    "mistralai/mistral-7b-instruct-v0.1",
+    "google/gemini-flash-1.5-8b"
 ]
 
 @app.get("/generate")
 async def generate_content(topic: str, lang: str):
     if not OPENROUTER_KEY:
-        return {"error": "KEY_NOT_FOUND", "details": "Render Environment Variable check karein."}
+        return {"error": "KEY_NOT_FOUND"}
     
-    # Corrected Indentation below
     print(f"DEBUG: Attempting request for {topic} with key ending in ...{OPENROUTER_KEY[-4:]}")    
     
     headers = {
@@ -39,7 +39,7 @@ async def generate_content(topic: str, lang: str):
     prompt = (
         f"Create a 3-scene learning path for {topic} in {lang}. "
         "Output ONLY a JSON object: "
-        '{"scenes": [{"visual_prompt": "detailed description for image gen", "narration_text": "explanation"}]}'
+        '{"scenes": [{"visual_prompt": "detailed description", "narration_text": "explanation"}]}'
     )
 
     async with httpx.AsyncClient() as client:
@@ -53,7 +53,7 @@ async def generate_content(topic: str, lang: str):
                     json={
                         "model": model_id,
                         "messages": [{"role": "user", "content": prompt}],
-                        "response_format": {"type": "json_object"}
+                        # 'response_format' ko hataya kyunki kuch free models ise support nahi karte
                     },
                     timeout=35.0
                 )
@@ -64,11 +64,11 @@ async def generate_content(topic: str, lang: str):
                     print(f"Success with: {model_id}")
                     return res_data
                 
-                print(f"Failed {model_id}: {res_data.get('error', 'Unknown Error')}")
+                print(f"Failed {model_id}: {res_data}")
                 continue 
                 
             except Exception as e:
                 print(f"Exception with {model_id}: {str(e)}")
                 continue
 
-        return {"error": "ALL_MODELS_FAILED", "message": "Koi bhi free model response nahi de raha."}
+        return {"error": "ALL_MODELS_FAILED", "message": "Model IDs not found. Please check OpenRouter documentation."}
