@@ -14,7 +14,7 @@ app.add_middleware(
 
 OPENROUTER_KEY = os.getenv("OPENROUTER_API_KEY")
 
-# 1. Models ki list priority wise (Sabse stable pehle)
+# Priority wise models - Agar pehla busy ho toh dusra try karega
 MODELS_TO_TRY = [
     "meta-llama/llama-3.2-1b-instruct:free",
     "meta-llama/llama-3.1-8b-instruct:free",
@@ -25,21 +25,26 @@ MODELS_TO_TRY = [
 @app.get("/generate")
 async def generate_content(topic: str, lang: str):
     if not OPENROUTER_KEY:
-        return {"error": "KEY_NOT_FOUND"}
+        return {"error": "KEY_NOT_FOUND", "details": "Render Environment Variable check karein."}
 
     headers = {
         "Authorization": f"Bearer {OPENROUTER_KEY}",
-        "HTTP-Referer": "https://github.com/rajeshkumar1994",
+        "HTTP-Referer": "https://github.com/rajeshkumar1994", # Mandatory for free tier
+        "X-Title": "AI School App",
         "Content-Type": "application/json"
     }
 
-    prompt = f"Create a 3-scene learning path for {topic} in {lang}. Output strictly JSON: " + '{"scenes": [{"visual_prompt": "description", "narration_text": "text"}]}'
+    prompt = (
+        f"Create a 3-scene learning path for {topic} in {lang}. "
+        "Output ONLY a JSON object: "
+        '{"scenes": [{"visual_prompt": "detailed description for image gen", "narration_text": "explanation"}]}'
+    )
 
     async with httpx.AsyncClient() as client:
-        # 2. Loop jo har model ko try karega jab tak success na mile
         for model_id in MODELS_TO_TRY:
             try:
-                print(f"Trying model: {model_id}") # Render logs mein dikhega
+                # Debugging ke liye Render logs mein dikhega
+                print(f"Trying model: {model_id}") 
                 
                 response = await client.post(
                     "https://openrouter.ai/api/v1/chat/completions",
@@ -49,22 +54,21 @@ async def generate_content(topic: str, lang: str):
                         "messages": [{"role": "user", "content": prompt}],
                         "response_format": {"type": "json_object"}
                     },
-                    timeout=30.0
+                    timeout=35.0
                 )
                 
                 res_data = response.json()
                 
-                # Agar "choices" mil gayi, toh result return kar do
+                # Success Check
                 if "choices" in res_data and len(res_data["choices"]) > 0:
-                    print(f"Success with model: {model_id}")
+                    print(f"Success with: {model_id}")
                     return res_data
-                else:
-                    print(f"Model {model_id} failed, error: {res_data.get('error')}")
-                    continue # Agla model try karein
-                    
+                
+                print(f"Failed {model_id}: {res_data.get('error', 'Unknown Error')}")
+                continue # Next model par switch karein
+                
             except Exception as e:
                 print(f"Exception with {model_id}: {str(e)}")
                 continue
 
-        # Agar saare models fail ho gaye
-        return {"error": "ALL_MODELS_FAILED", "message": "Koi bhi model abhi available nahi hai. Please try again later."}
+        return {"error": "ALL_MODELS_FAILED", "message": "Koi bhi free model response nahi de raha. OpenRouter Activity dashboard check karein."}
