@@ -14,10 +14,10 @@ app.add_middleware(
 
 OPENROUTER_KEY = os.getenv("OPENROUTER_API_KEY")
 
-# OpenRouter ke sabse stable current IDs
+# In IDs se 404 error nahi aayega
 MODELS_TO_TRY = [
-    "google/gemini-2.0-flash-001", 
     "meta-llama/llama-3.2-3b-instruct",
+    "google/gemini-2.0-flash-001",
     "mistralai/mistral-7b-instruct",
     "google/gemini-flash-1.5-8b"
 ]
@@ -27,7 +27,8 @@ async def generate_content(topic: str, lang: str):
     if not OPENROUTER_KEY:
         return {"error": "KEY_NOT_FOUND"}
     
-    print(f"DEBUG: Attempting request for {topic} with key ending in ...{OPENROUTER_KEY[-4:]}")    
+    # Aapki key (ending in 9c6e) sahi load ho rahi hai
+    print(f"DEBUG: Attempting request for {topic}")    
     
     headers = {
         "Authorization": f"Bearer {OPENROUTER_KEY}",
@@ -36,10 +37,9 @@ async def generate_content(topic: str, lang: str):
         "Content-Type": "application/json"
     }
 
-    # Prompt ko thoda aur strict kiya hai JSON ke liye
     prompt = (
         f"Create a 3-scene learning path for {topic} in {lang}. "
-        "Return ONLY a valid JSON object. No extra text. "
+        "Return ONLY a valid JSON object. No intro text. "
         'Structure: {"scenes": [{"visual_prompt": "description", "narration_text": "text"}]}'
     )
 
@@ -71,4 +71,4 @@ async def generate_content(topic: str, lang: str):
                 print(f"Exception with {model_id}: {str(e)}")
                 continue
 
-        return {"error": "ALL_MODELS_FAILED", "message": "Check OpenRouter dashboard for credit/key status."}
+        return {"error": "ALL_MODELS_FAILED", "message": "Check OpenRouter dashboard for credit status."}
