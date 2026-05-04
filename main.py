@@ -14,7 +14,6 @@ app.add_middleware(
 
 OPENROUTER_KEY = os.getenv("OPENROUTER_API_KEY")
 
-# Priority wise models - Agar pehla busy ho toh dusra try karega
 MODELS_TO_TRY = [
     "meta-llama/llama-3.2-1b-instruct:free",
     "meta-llama/llama-3.1-8b-instruct:free",
@@ -22,19 +21,20 @@ MODELS_TO_TRY = [
     "mistralai/mistral-7b-instruct:free"
 ]
 
-
 @app.get("/generate")
 async def generate_content(topic: str, lang: str):
     if not OPENROUTER_KEY:
         return {"error": "KEY_NOT_FOUND", "details": "Render Environment Variable check karein."}
+    
+    # Corrected Indentation below
     print(f"DEBUG: Attempting request for {topic} with key ending in ...{OPENROUTER_KEY[-4:]}")    
-    # Yeh format OpenRouter ke liye sabse best hai
-headers = {
-    "Authorization": f"Bearer {OPENROUTER_KEY}", # Key load ho rahi hai ya nahi, ye check hoga
-    "HTTP-Referer": "https://rt16apr1994.github.io", # Valid URL format
-    "X-Title": "AI School App",
-    "Content-Type": "application/json"
-}
+    
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_KEY}",
+        "HTTP-Referer": "https://rt16apr1994.github.io", 
+        "X-Title": "AI School App",
+        "Content-Type": "application/json"
+    }
 
     prompt = (
         f"Create a 3-scene learning path for {topic} in {lang}. "
@@ -45,7 +45,6 @@ headers = {
     async with httpx.AsyncClient() as client:
         for model_id in MODELS_TO_TRY:
             try:
-                # Debugging ke liye Render logs mein dikhega
                 print(f"Trying model: {model_id}") 
                 
                 response = await client.post(
@@ -61,16 +60,15 @@ headers = {
                 
                 res_data = response.json()
                 
-                # Success Check
                 if "choices" in res_data and len(res_data["choices"]) > 0:
                     print(f"Success with: {model_id}")
                     return res_data
                 
                 print(f"Failed {model_id}: {res_data.get('error', 'Unknown Error')}")
-                continue # Next model par switch karein
+                continue 
                 
             except Exception as e:
                 print(f"Exception with {model_id}: {str(e)}")
                 continue
 
-        return {"error": "ALL_MODELS_FAILED", "message": "Koi bhi free model response nahi de raha. OpenRouter Activity dashboard check karein."}
+        return {"error": "ALL_MODELS_FAILED", "message": "Koi bhi free model response nahi de raha."}
