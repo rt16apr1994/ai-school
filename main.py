@@ -14,11 +14,11 @@ app.add_middleware(
 
 OPENROUTER_KEY = os.getenv("OPENROUTER_API_KEY")
 
-# OpenRouter ke current active free models (updated slugs)
+# OpenRouter ke sabse stable current IDs
 MODELS_TO_TRY = [
-    "meta-llama/llama-3.2-1b-instruct", # Removed :free as OpenRouter auto-routes
-    "meta-llama/llama-3.1-8b-instruct",
-    "mistralai/mistral-7b-instruct-v0.1",
+    "google/gemini-2.0-flash-001", 
+    "meta-llama/llama-3.2-3b-instruct",
+    "mistralai/mistral-7b-instruct",
     "google/gemini-flash-1.5-8b"
 ]
 
@@ -36,10 +36,11 @@ async def generate_content(topic: str, lang: str):
         "Content-Type": "application/json"
     }
 
+    # Prompt ko thoda aur strict kiya hai JSON ke liye
     prompt = (
         f"Create a 3-scene learning path for {topic} in {lang}. "
-        "Output ONLY a JSON object: "
-        '{"scenes": [{"visual_prompt": "detailed description", "narration_text": "explanation"}]}'
+        "Return ONLY a valid JSON object. No extra text. "
+        'Structure: {"scenes": [{"visual_prompt": "description", "narration_text": "text"}]}'
     )
 
     async with httpx.AsyncClient() as client:
@@ -52,10 +53,9 @@ async def generate_content(topic: str, lang: str):
                     headers=headers,
                     json={
                         "model": model_id,
-                        "messages": [{"role": "user", "content": prompt}],
-                        # 'response_format' ko hataya kyunki kuch free models ise support nahi karte
+                        "messages": [{"role": "user", "content": prompt}]
                     },
-                    timeout=35.0
+                    timeout=40.0
                 )
                 
                 res_data = response.json()
@@ -71,4 +71,4 @@ async def generate_content(topic: str, lang: str):
                 print(f"Exception with {model_id}: {str(e)}")
                 continue
 
-        return {"error": "ALL_MODELS_FAILED", "message": "Model IDs not found. Please check OpenRouter documentation."}
+        return {"error": "ALL_MODELS_FAILED", "message": "Check OpenRouter dashboard for credit/key status."}
